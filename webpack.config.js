@@ -1,6 +1,6 @@
 module.exports = {
   entry: {
-    entryListApp: './src/app.jsx'
+    app: './src/app.jsx'
   },
   output: {
     filename: 'public/[name].js'
