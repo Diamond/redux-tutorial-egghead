@@ -1,6 +1,7 @@
 import { createStore, combineReducers } from 'redux';
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { Provider, connect } from 'react-redux';
 
 const todo = (state = [], action) => {
   switch (action.type) {
@@ -41,10 +42,6 @@ const visibilityFilter = (state = 'SHOW_ALL', action) => {
   }
 };
 
-const todoApp = combineReducers({todos, visibilityFilter});
-
-const store = createStore(todoApp);
-
 const getVisibleTodos = (
     todos,
     filter
@@ -66,24 +63,27 @@ const getVisibleTodos = (
 };
 
 let nextTodoId = 0;
-// const FilterLink = ({
-//   filter, currentFilter, children
-// }) => {
-//   if (filter === currentFilter) {
-//     return <span>{children}</span>;
-//   }
-//   return (
-//     <a href="#" onClick={e => {
-//       e.preventDefault();
-//       store.dispatch({
-//         type: 'SET_VISIBILITY_FILTER',
-//         filter
-//       });
-//     }}>
-//       {children}
-//     </a>
-//   );
-// };
+const addTodo = (text) => {
+  return {
+    type: 'ADD_TODO',
+    id: nextTodoId++,
+    text
+  };
+};
+
+const setVisibilityFilter = (filter) => {
+  return {
+    type: 'SET_VISIBILITY_FILTER',
+    filter
+  };
+}
+
+const toggleTodo = (id) => {
+  return {
+    type: 'TOGGLE_TODO',
+    id
+  };
+};
 
 const Todo = ({
   onClick,
@@ -106,15 +106,25 @@ const TodoList = ({
   </ul>
 );
 
-const AddTodo = ({
-  onAddClick
-}) => {
+const mapStateToTodoListProps = (state) => {
+  return {
+    todos: getVisibleTodos(state.todos, state.visibilityFilter)
+  };
+};
+const mapDispatchToTodoListProps = (dispatch) => {
+  return {
+    onTodoClick: (id) => { dispatch(toggleTodo(id)); }
+  };
+};
+const VisibleTodoList = connect(mapStateToTodoListProps, mapDispatchToTodoListProps)(TodoList);
+
+let AddTodo = ({ dispatch }) => {
   let input;
   return (
     <div>
       <input ref={node => { input = node; }} />
       <button onClick={() => {
-          onAddClick(input.value);
+          dispatch(addTodo(input.value));
           input.value = '';
         }}>
         Add Todo
@@ -122,11 +132,9 @@ const AddTodo = ({
     </div>
   );
 };
+AddTodo = connect()(AddTodo);
 
-const Footer = ({
-  visibilityFilter,
-  onFilterClick
-}) => (
+const Footer = () => (
   <p>
     Show:
     {' '}
@@ -162,66 +170,35 @@ const Link = ({
   );
 };
 
-class FilterLink extends React.Component {
-  componentDidMount() {
-    this.unsubscribe = store.subscribe(() => this.forceUpdate());
-  }
-
-  componentWillUnmount() {
-    this.unsubscribe();
-  }
-
-  render() {
-    const props = this.props;
-    const state = store.getState();
-    return (
-      <Link
-        active={props.filter === state.visibilityFilter}
-        onClick={() => {
-          store.dispatch({
-            type: 'SET_VISIBILITY_FILTER',
-            filter: props.filter
-          });
-        }}>
-        {props.children}
-      </Link>
-    );
-  }
+const mapStateToLinkProps = (state, ownProps) => {
+  return {
+    active: ownProps.filter === state.visibilityFilter
+  };
 };
+const mapDispatchToLinkProps = (dispatch, ownProps) => {
+  return {
+    onClick: () => {
+      dispatch(setVisibilityFilter(ownProps.filter));
+    }
+  };
+};
+const FilterLink = connect(mapStateToLinkProps, mapDispatchToLinkProps)(Link);
 
-const TodoApp = ({
-  todos,
-  visibilityFilter
-}) => (
+const TodoApp = () => (
   <div>
-    <AddTodo onAddClick={text => {
-      store.dispatch({
-        type: 'ADD_TODO',
-        id: nextTodoId++,
-        text
-      });
-    }}/>
-    <TodoList
-      todos={getVisibleTodos(todos, visibilityFilter)}
-      onTodoClick={id => {
-        store.dispatch({
-          type: 'TOGGLE_TODO',
-          id: id
-        });
-      }}
-    />
-  <Footer/>
+    <AddTodo/>
+    <VisibleTodoList/>
+    <Footer/>
   </div>
 );
 
-const render = () => {
+export default function main() {
+  const todoApp = combineReducers({todos, visibilityFilter});
   ReactDOM.render(
-    <TodoApp {...store.getState()} />,
+    <Provider store={createStore(todoApp)}>
+      <TodoApp/>
+    </Provider>,
+
     document.getElementById('root')
   );
-};
-
-export default function main() {
-  store.subscribe(render);
-  render();
 };
