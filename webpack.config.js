@@ -1,7 +1,6 @@
 module.exports = {
   entry: {
-    app: './src/app.jsx',
-    redux9: './src/redux9.jsx'
+    app: './src/app.jsx'
   },
   output: {
     filename: 'public/[name].js'
