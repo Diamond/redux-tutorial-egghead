@@ -46,13 +46,13 @@
 
 	"use strict";
 
-	var _redux = __webpack_require__(1);
+	var _reduxFinal = __webpack_require__(1);
 
-	var _redux2 = _interopRequireDefault(_redux);
+	var _reduxFinal2 = _interopRequireDefault(_reduxFinal);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	(0, _redux2.default)();
+	(0, _reduxFinal2.default)();
 
 /***/ },
 /* 1 */
